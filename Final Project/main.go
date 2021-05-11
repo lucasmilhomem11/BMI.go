@@ -6,16 +6,16 @@ Date Started: 04/04/21
 package main
 
 import (
-	"strconv"
+	"html/template"
 	"log"
 	"math"
 	"net/http"
-	"html/template"
+	"strconv"
 )
 
-const x = 703
-var tpl *template.Template
+const x, y = 703, 12
 
+var tpl *template.Template
 
 func init() {
 	tpl = template.Must(template.ParseGlob("view/*.gohtml"))
@@ -40,20 +40,26 @@ func processor(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fheight := r.FormValue("height")
+	feet := r.FormValue("feet")
+	fheight := r.FormValue("inches")
 	lweight := r.FormValue("weight")
 	height, _ := strconv.ParseFloat(fheight, 64)
+	feetHeight, _ := strconv.ParseFloat(feet, 64)
 	weight, _ := strconv.ParseFloat(lweight, 64)
-	bmi := (weight * x) / math.Pow(height, 2)
+	totalHeight := (feetHeight * y) + height
+	bmi := (weight * x) / math.Pow(totalHeight, 2)
 
-	d := struct{
-		Height float64
-		Weight float64
-		BMI float64
+	d := struct {
+		Height      float64
+		Inches      float64
+		Weight      float64
+		totalHeight float64
+		BMI         float64
 	}{
 		Height: height,
+		Inches: feetHeight,
 		Weight: weight,
-		BMI: bmi,
+		BMI:    bmi,
 	}
-	tpl.ExecuteTemplate(w, "processor.gohtml",d )
+	tpl.ExecuteTemplate(w, "processor.gohtml", d)
 }
